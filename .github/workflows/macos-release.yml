@@ -28,6 +28,7 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
+          cache-on-failure: true
       - name: Install frontend dependencies
         run: npm ci
       - name: Build universal Mac installer
@@ -35,7 +36,13 @@ jobs:
           # Ad-hoc signing supports both architectures without Apple credentials.
           # This is not Developer ID signing or Apple notarization.
           APPLE_SIGNING_IDENTITY: '-'
-        run: npm run tauri build -- --target universal-apple-darwin --bundles dmg
+        run: npm run tauri build -- --target universal-apple-darwin --bundles app,dmg
+      - name: Preserve the built DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: BuildBench-macOS-universal
+          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
       - name: Verify and publish installer to the existing release
         shell: bash
         env:
