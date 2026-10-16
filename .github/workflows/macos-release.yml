@@ -82,4 +82,4 @@ jobs:
           codesign --verify --deep --strict "$app"
           lipo "$app/Contents/MacOS/$executable" -verify_arch arm64 x86_64
           gh release view "v${version}"
-          gh release upload "v${version}" "$dmg"
+          gh release upload "v${version}" "$dmg" --clobber

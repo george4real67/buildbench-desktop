@@ -1,116 +1,38 @@
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.typescript:hover {
-  filter: drop-shadow(0 0 2em #2d79c7);
-}
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
+﻿:root {
+  font-family: Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #23272f;
+  background: #fafbfc;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+  color-scheme: light dark;
+  --muted: #626976;
+  --line: #e5e7eb;
+  --surface: #fff;
+  --accent: #1e40af;
+  --accent-hover: #19378f;
 }
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 280px; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; }
+.welcome { flex: 1; display: grid; place-items: center; padding: 64px 24px 48px; }
+.welcome-card { width: 100%; max-width: 360px; text-align: center; }
+.brand-mark { display: block; margin: 0 auto 16px; border-radius: 16px; object-fit: contain; }
+.brand-name { font-size: 16px; font-weight: 650; letter-spacing: -.4px; }
+h1 { margin: 40px 0 12px; font-size: clamp(25px, 4vw, 30px); line-height: 1.2; letter-spacing: -1px; font-weight: 650; }
+.subtitle { margin: 0 0 32px; color: var(--muted); font-size: 15px; line-height: 1.6; }
+.auth-actions { display: grid; gap: 12px; }
+.button { display: flex; align-items: center; justify-content: center; min-height: 50px; padding: 12px 20px; border: 1px solid transparent; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none; transition: background-color 150ms, border-color 150ms; }
+.button-primary { background: var(--accent); color: #fff; }
+.button-primary:hover { background: var(--accent-hover); }
+.button-secondary { background: var(--surface); border-color: var(--line); color: inherit; }
+.button-secondary:hover { border-color: var(--muted); }
+a:focus-visible { outline: 3px solid #7b9bff; outline-offset: 4px; }
+.legal-footer { text-align: center; padding: 24px 24px 28px; }
+.legal-footer a { color: var(--muted); font-size: 13px; text-decoration: none; }
+.legal-footer a:hover { color: inherit; text-decoration: underline; text-underline-offset: 4px; }
+.legal-footer span { margin-left: 4px; }
+.legal-footer p { margin: 12px 0 0; font-size: 11px; color: var(--muted); }
 @media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
+  :root { color: #ededed; background: #0b0b0b; --muted: #aaa; --line: #303030; --surface: #151515; --accent: #3563cb; --accent-hover: #4070dc; }
 }
+@media (prefers-reduced-motion: reduce) { .button { transition: none; } }

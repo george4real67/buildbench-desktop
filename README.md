@@ -1,5 +1,25 @@
 # Tauri + Vanilla TS
 
+## App welcome screen
+
+The app opens a bundled welcome screen with Sign up and Sign in buttons and a
+Legal Center link at the bottom. It supports light and dark system themes and
+loads without an internet connection. Account buttons open the existing website
+authentication inside the app using its hash routes (`/#/signup`, `/#/login`);
+authentication and workspace access require an internet connection.
+
+Build new installers with `npm run tauri build` to distribute this change.
+The adjacent `buildbench-download` project serves published installers; its
+existing release links will continue to serve the old binaries until replaced.
+
+## Security review
+
+See [SECURITY_REPORT.md](SECURITY_REPORT.md) for the desktop security review,
+local verification, and outstanding website/release checks. Run
+`npm run test:security` to check the wrapper's security configuration.
+The remote website has no native capabilities or application commands; changes
+that add native functionality must receive a fresh permission review.
+
 This template should help get you started developing with Tauri in vanilla HTML, CSS and Typescript.
 
 ## Recommended IDE Setup
