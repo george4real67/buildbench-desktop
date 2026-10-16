@@ -1,18 +1,19 @@
 {
   "name": "tauri-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test:security": "node --test tests/security.test.mjs",
-    "tauri": "tauri"
+    "test:security": "node --test tests/*.test.mjs",
+    "tauri": "tauri",
+    "release": "node scripts/publish-release.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
-		"vite": "^8.0.16",
+    "vite": "^8.0.16",
     "typescript": "~6.0.3"
   }
 }

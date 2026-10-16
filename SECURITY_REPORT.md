@@ -2,6 +2,24 @@
 
 Date: 2026-10-16 (Asia/Karachi)
 
+## Subsequent updater implementation (0.1.1)
+
+This section supersedes the earlier zero-plugin architecture below. Native Rust
+now registers the updater and dialog plugins. No JavaScript commands are exposed:
+capabilities remain empty and remote website content receives no IPC access.
+A separate local toolbar webview remains above the content. Its navigation
+handler accepts only its bundled origin and intercepts one exact update action;
+it never sends that action to the network. Native code uses one fixed HTTPS
+GitHub endpoint and a pinned public key, requires version-bound signatures, asks
+for confirmation before download/install, and serializes update attempts.
+
+The private signing key stays local in a gitignored directory; the Mac CI job
+only builds and validates artifacts. The release script signs Mac artifacts
+locally and uploads public signatures. It advertises a release only after all
+supported platforms have installers and manifest entries. Updater signatures
+are distinct from OS publisher signing/notarization. The earlier OS-signing and
+website audit limitations still apply.
+
 Subsequent welcome-screen change: the startup window now loads bundled
 `index.html`, with HTTPS links to the existing website hash routes for signup
 and login, and to Legal Center. The CSP and native permissions are unchanged.
