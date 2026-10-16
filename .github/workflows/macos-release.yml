@@ -2,6 +2,11 @@
 
 on:
   workflow_dispatch:
+    inputs:
+      artifact_run_id:
+        description: 'Optional prior run ID: verify and publish its saved DMG without rebuilding'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -16,6 +21,7 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,26 +29,39 @@ jobs:
           node-version: '22'
           cache: npm
       - uses: dtolnay/rust-toolchain@stable
+        if: inputs.artifact_run_id == ''
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
       - uses: swatinem/rust-cache@v2
+        if: inputs.artifact_run_id == ''
         with:
           workspaces: src-tauri -> target
           cache-on-failure: true
       - name: Install frontend dependencies
+        if: inputs.artifact_run_id == ''
         run: npm ci
       - name: Build universal Mac installer
+        if: inputs.artifact_run_id == ''
         env:
           # Ad-hoc signing supports both architectures without Apple credentials.
           # This is not Developer ID signing or Apple notarization.
           APPLE_SIGNING_IDENTITY: '-'
         run: npm run tauri build -- --target universal-apple-darwin --bundles app,dmg
       - name: Preserve the built DMG
+        if: inputs.artifact_run_id == ''
         uses: actions/upload-artifact@v4
         with:
           name: BuildBench-macOS-universal
           path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
           if-no-files-found: error
+      - name: Restore a saved DMG for verification
+        if: inputs.artifact_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: BuildBench-macOS-universal
+          run-id: ${{ inputs.artifact_run_id }}
+          github-token: ${{ github.token }}
+          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg
       - name: Verify and publish installer to the existing release
         shell: bash
         env:
@@ -52,7 +71,15 @@ jobs:
           version=$(node -p "require('./src-tauri/tauri.conf.json').version")
           dmg="src-tauri/target/universal-apple-darwin/release/bundle/dmg/BuildBench_${version}_universal.dmg"
           test -s "$dmg"
-          codesign --verify --deep --strict src-tauri/target/universal-apple-darwin/release/bundle/macos/BuildBench.app
-          lipo -verify_arch arm64 x86_64 src-tauri/target/universal-apple-darwin/release/bundle/macos/BuildBench.app/Contents/MacOS/tauri-app
+          mountpoint="$RUNNER_TEMP/buildbench-dmg"
+          mkdir -p "$mountpoint"
+          hdiutil verify "$dmg"
+          hdiutil attach "$dmg" -readonly -nobrowse -mountpoint "$mountpoint"
+          trap 'hdiutil detach "$mountpoint"' EXIT
+          app="$mountpoint/BuildBench.app"
+          executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")" = "$version"
+          codesign --verify --deep --strict "$app"
+          lipo "$app/Contents/MacOS/$executable" -verify_arch arm64 x86_64
           gh release view "v${version}"
           gh release upload "v${version}" "$dmg"
