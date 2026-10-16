@@ -63,7 +63,9 @@ for (const name of [`BuildBench_${version}_universal.dmg`, 'BuildBench.app.tar.g
 for (const [kind, name] of [['nsis', `BuildBench_${version}_x64-setup.exe`], ['msi', `BuildBench_${version}_x64_en-US.msi`]]) {
   for (const suffix of ['', '.sig']) copyFileSync(`src-tauri/target/release/bundle/${kind}/${name}${suffix}`, join(output, name + suffix));
 }
-tauri(['signer', 'sign', '--private-key-path', keyPath, '--app-version', version, join(output, 'BuildBench.app.tar.gz')]);
+const signerEnv = { ...process.env };
+delete signerEnv.TAURI_SIGNING_PRIVATE_KEY;
+run(process.execPath, [resolve('node_modules/@tauri-apps/cli/tauri.js'), 'signer', 'sign', '--private-key-path', keyPath, '--app-version', version, join(output, 'BuildBench.app.tar.gz')], { env: signerEnv });
 const manifest = createManifest(version, output);
 writeFileSync(join(output, 'latest.json'), JSON.stringify(manifest, null, 2) + '\n');
 run('cargo', ['run', '--locked', '--manifest-path', 'src-tauri/Cargo.toml', '--example', 'verify_release', '--', output]);
