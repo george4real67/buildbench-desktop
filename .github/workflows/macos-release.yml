@@ -1,0 +1,51 @@
+﻿name: Build macOS installer
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-installer
+  cancel-in-progress: false
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Build universal Mac installer
+        env:
+          # Ad-hoc signing supports both architectures without Apple credentials.
+          # This is not Developer ID signing or Apple notarization.
+          APPLE_SIGNING_IDENTITY: '-'
+        run: npm run tauri build -- --target universal-apple-darwin --bundles dmg
+      - name: Verify and publish installer to the existing release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          dmg="src-tauri/target/universal-apple-darwin/release/bundle/dmg/BuildBench_${version}_universal.dmg"
+          test -s "$dmg"
+          codesign --verify --deep --strict src-tauri/target/universal-apple-darwin/release/bundle/macos/BuildBench.app
+          lipo -verify_arch arm64 x86_64 src-tauri/target/universal-apple-darwin/release/bundle/macos/BuildBench.app/Contents/MacOS/tauri-app
+          gh release view "v${version}"
+          gh release upload "v${version}" "$dmg"
