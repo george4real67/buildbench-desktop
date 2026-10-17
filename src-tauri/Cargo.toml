@@ -1,7 +1,7 @@
 [package]
 name = "tauri-app"
-version = "0.1.1"
-description = "BuildBench desktop app"
+version = "0.1.2"
+description = "BuildBench AI creation platform for websites, chatbots, eBooks, resumes and team workspaces"
 authors = ["BuildBench"]
 edition = "2024"
 

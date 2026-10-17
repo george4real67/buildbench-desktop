@@ -8,6 +8,12 @@ loads without an internet connection. Account buttons open the existing website
 authentication inside the app using its hash routes (`/#/signup`, `/#/login`);
 authentication and workspace access require an internet connection.
 
+The welcome screen uses the website's BuildBench — AI Creation Platform branding
+and favicon. After sign-in, the app loads `buildbench.online` directly, so website
+features, performance improvements, and metadata updates are shared with the app.
+The local welcome screen and native toolbar need a new desktop build to update.
+Search-engine sitemap and robots files remain on the public website.
+
 The top-right Update control lives in a separate local webview, so it remains
 available after signing in. It checks the latest release, asks before installing,
 shows download progress, verifies the signature and signed version, and restarts.
