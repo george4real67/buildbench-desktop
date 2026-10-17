@@ -9,6 +9,54 @@ use tauri_plugin_updater::UpdaterExt;
 
 const BAR_HEIGHT: f64 = 52.0;
 const CHECK_URL: &str = "https://buildbench.invalid/check-for-updates";
+const APP_START_URL: &str = "https://buildbench.online/#/login";
+// Presentation and routing only. This script grants no native or account permissions.
+const DESKTOP_INIT: &str = r#"
+(() => {
+    if (window.top !== window || location.origin !== 'https://buildbench.online') return;
+    const marketing = new Set(['/', '/index.html', '/how-it-works', '/how-it-works.html', '/pricing', '/pricing.html']);
+    const route = () => location.hash.startsWith('#/') ? location.hash.slice(1) : location.pathname.replace(/\/$/, '') || '/';
+    const destination = path => /^\/pricing(?:\.html)?$/.test(path) ? '/credits' : '/dashboard';
+    const leaveMarketing = () => {
+        const path = route();
+        if (!marketing.has(path)) return false;
+        location.replace('/#' + destination(path));
+        return true;
+    };
+    if (leaveMarketing()) return;
+    window.addEventListener('hashchange', event => {
+        if (marketing.has(route())) { event.stopImmediatePropagation(); leaveMarketing(); }
+    }, true);
+    document.addEventListener('click', event => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const anchor = event.target.closest?.('a[href]');
+        if (!anchor || anchor.hasAttribute('download') || anchor.target === '_blank') return;
+        const href = anchor.getAttribute('href') || '';
+        if (href.startsWith('#') && !href.startsWith('#/')) return;
+        const url = new URL(anchor.href, location.href);
+        if (url.origin !== location.origin) return;
+        const path = url.hash.startsWith('#/') ? url.hash.slice(1) : url.pathname.replace(/\/$/, '') || '/';
+        if (!marketing.has(path)) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const next = destination(path);
+        if (window.__bizAppBridge?.navigate) window.__bizAppBridge.navigate(next);
+        else location.hash = next;
+    }, true);
+    // Hide server-rendered marketing content while Firebase restores the session.
+    const observer = new MutationObserver(() => {
+        if (!document.documentElement) return;
+        if (!document.getElementById('bb-desktop-style')) {
+            const style = document.createElement('style');
+            style.id = 'bb-desktop-style';
+            style.textContent = '#app:has(main[data-public-route]){visibility:hidden}body:has(#app main[data-public-route])::before{content:"Opening BuildBench…";position:fixed;inset:0;display:grid;place-items:center;color:var(--ink,#23272f);background:var(--paper,#fafbfc);font:500 15px Inter,system-ui,sans-serif}';
+            document.documentElement.append(style);
+        }
+        if (document.querySelector('#app .auth-shell, #app .app-shell, #app .access-restricted')) observer.disconnect();
+    });
+    observer.observe(document, {childList: true, subtree: true});
+})();
+"#;
 
 fn status(app: &tauri::AppHandle, message: &str, busy: bool) {
     if let Some(bar) = app.get_webview("app-toolbar") {
@@ -84,7 +132,8 @@ pub fn run() {
         .setup(|app| {
             let window = tauri::window::WindowBuilder::from_config(app, &app.config().app.windows[0])?.build()?;
             let content = window.add_child(
-                tauri::webview::WebviewBuilder::new("main", WebviewUrl::App("index.html".into()))
+                tauri::webview::WebviewBuilder::new("main", WebviewUrl::External(APP_START_URL.parse()?))
+                    .initialization_script(DESKTOP_INIT)
                     .devtools(false).zoom_hotkeys_enabled(true),
                 LogicalPosition::new(0.0, BAR_HEIGHT),
                 LogicalSize::new(1280.0, 800.0 - BAR_HEIGHT),

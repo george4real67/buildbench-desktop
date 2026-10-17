@@ -1,18 +1,18 @@
 # Tauri + Vanilla TS
 
-## App welcome screen
+## Desktop account entry
 
-The app opens a bundled welcome screen with Sign up and Sign in buttons and a
-Legal Center link at the bottom. It supports light and dark system themes and
-loads without an internet connection. Account buttons open the existing website
-authentication inside the app using its hash routes (`/#/signup`, `/#/login`);
-authentication and workspace access require an internet connection.
+The desktop app opens the existing BuildBench login screen directly. Firebase
+restores existing sessions and sends verified users to their dashboard; new
+users can choose Create one to sign up. Account and workspace access require
+an internet connection.
 
-The welcome screen uses the website's BuildBench — AI Creation Platform branding
-and favicon. After sign-in, the app loads `buildbench.online` directly, so website
-features, performance improvements, and metadata updates are shared with the app.
-The local welcome screen and native toolbar need a new desktop build to update.
-Search-engine sitemap and robots files remain on the public website.
+A desktop-only initialization script keeps homepage and How It Works navigation
+inside the workspace instead of showing the public landing pages. Pricing links
+open the existing credits screen. Password reset, Google authentication, email
+verification and legal links retain their existing behavior. The script runs only
+on the main BuildBench webview, grants no native capabilities and does not change
+the website or authentication guards.
 
 The top-right Update control lives in a separate local webview, so it remains
 available after signing in. It checks the latest release, asks before installing,

@@ -69,7 +69,7 @@ run(process.execPath, [resolve('node_modules/@tauri-apps/cli/tauri.js'), 'signer
 const manifest = createManifest(version, output);
 writeFileSync(join(output, 'latest.json'), JSON.stringify(manifest, null, 2) + '\n');
 run('cargo', ['run', '--locked', '--manifest-path', 'src-tauri/Cargo.toml', '--example', 'verify_release', '--', output]);
-writeFileSync(join(output, 'notes.local'), `BuildBench ${version}\n\nUpdated BuildBench branding and app icons. The desktop app uses the current BuildBench website, including the email verification code screen. Signed in-app updates for Windows and Mac.\n`);
+writeFileSync(join(output, 'notes.local'), `BuildBench ${version}\n\nThe desktop app opens directly to login and restores existing sessions. Public landing pages stay outside desktop navigation. Existing authentication, workspace tools and signed updates are preserved.\n`);
 // Prepare all assets before making the new release visible to installed apps.
 const existing = spawnSync('gh', ['release', 'view', tag, '--repo', repo, '--json', 'isDraft'], { encoding: 'utf8' });
 if (existing.status === 0) {
