@@ -2,7 +2,7 @@
 import { resolve, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { createManifest } from './release-manifest.mjs';
+import { createManifest, createChecksums } from './release-manifest.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 process.chdir(root);
@@ -77,7 +77,9 @@ if (existing.status === 0) {
 } else {
   run('gh', ['release', 'create', tag, '--repo', repo, '--target', sha, '--draft', '--title', `BuildBench ${version}`, '--notes-file', join(output, 'notes.local')]);
 }
-const assets = readdirSync(output).filter(name => /\.(exe|msi|dmg|gz|sig|json)$/.test(name)).map(name => join(output, name));
+const checksumNames = readdirSync(output).filter(name => /\.(exe|msi|dmg|gz)$/.test(name));
+writeFileSync(join(output, 'SHA256SUMS.txt'), createChecksums(output, checksumNames));
+const assets = readdirSync(output).filter(name => (/\.(exe|msi|dmg|gz|sig|json)$/.test(name) || name === 'SHA256SUMS.txt')).map(name => join(output, name));
 run('gh', ['release', 'upload', tag, '--repo', repo, '--clobber', ...assets]);
 run('gh', ['release', 'edit', tag, '--repo', repo, '--draft=false', '--latest']);
 // Keep existing download-site links working, without storing the signing key in CI.

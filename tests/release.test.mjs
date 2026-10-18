@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { createManifest } from '../scripts/release-manifest.mjs';
+import { createManifest, createChecksums } from '../scripts/release-manifest.mjs';
 const signature = Buffer.from('signed fixture').toString('base64');
 function fixture() {
   const dir = mkdtempSync(join(tmpdir(), 'buildbench-release-'));
@@ -34,4 +34,16 @@ test('publication refuses missing signatures, empty installers and invalid versi
     writeFileSync(join(dir, 'BuildBench.app.tar.gz'), '');
     assert.throws(() => createManifest('0.1.1', dir), /Empty installer/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('SEC-012 checksums cover exact artifact bytes and reject path injection', () => {
+ const dir=fixture();
+ try {
+  const result=createChecksums(dir,['BuildBench.app.tar.gz']);
+  assert.match(result,/^[a-f0-9]{64}  BuildBench\.app\.tar\.gz\n$/);
+  assert.equal(result,createChecksums(dir,['BuildBench.app.tar.gz']));
+  assert.throws(()=>createChecksums(dir,['../secret']));
+  writeFileSync(join(dir,'BuildBench.app.tar.gz'),'changed');
+  assert.notEqual(result,createChecksums(dir,['BuildBench.app.tar.gz']));
+ } finally { rmSync(dir,{recursive:true,force:true}); }
 });
