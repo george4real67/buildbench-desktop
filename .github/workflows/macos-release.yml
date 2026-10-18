@@ -11,15 +11,15 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
           cache: npm
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
-      - uses: swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
         with:
           workspaces: src-tauri -> target
       - run: npm ci
@@ -41,7 +41,7 @@ jobs:
           hdiutil verify "src-tauri/target/universal-apple-darwin/release/bundle/dmg/BuildBench_${version}_universal.dmg"
           COPYFILE_DISABLE=1 tar -czf "src-tauri/target/universal-apple-darwin/release/bundle/macos/BuildBench.app.tar.gz" -C "$(dirname "$app")" BuildBench.app
       - name: Preserve installers for local signing and publication
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: BuildBench-macOS-universal
           path: |
