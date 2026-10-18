@@ -49,7 +49,8 @@ const DESKTOP_INIT: &str = r#"
         if (!document.getElementById('bb-desktop-style')) {
             const style = document.createElement('style');
             style.id = 'bb-desktop-style';
-            style.textContent = '#app:has(main[data-public-route]){visibility:hidden}body:has(#app main[data-public-route])::before{content:"Opening BuildBench…";position:fixed;inset:0;display:grid;place-items:center;color:var(--ink,#23272f);background:var(--paper,#fafbfc);font:500 15px Inter,system-ui,sans-serif}';
+            // Keep workspace controls from collapsing when zoom reduces the available height.
+            style.textContent = '.sidebar .biz-nav-section{flex-shrink:0}#app:has(main[data-public-route]){visibility:hidden}body:has(#app main[data-public-route])::before{content:"Opening BuildBench…";position:fixed;inset:0;display:grid;place-items:center;color:var(--ink,#23272f);background:var(--paper,#fafbfc);font:500 15px Inter,system-ui,sans-serif}';
             document.documentElement.append(style);
         }
         if (document.querySelector('#app .auth-shell, #app .app-shell, #app .access-restricted')) observer.disconnect();
