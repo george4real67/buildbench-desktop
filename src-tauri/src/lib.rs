@@ -59,6 +59,21 @@ const DESKTOP_INIT: &str = r#"
 })();
 "#;
 
+fn remote_navigation_allowed(url: &tauri::Url) -> bool {
+    url.scheme() == "https" && url.username().is_empty() && url.password().is_none()
+}
+
+fn toolbar_navigation_allowed(url: &tauri::Url) -> bool {
+    if !url.username().is_empty() || url.password().is_some() || url.path() != "/toolbar.html" {
+        return false;
+    }
+    let bundled = url.port().is_none() && (
+        (url.scheme() == "tauri" && url.host_str() == Some("localhost")) ||
+        (url.scheme() == "http" && url.host_str() == Some("tauri.localhost"))
+    );
+    bundled || (cfg!(debug_assertions) && url.scheme() == "http" && url.host_str() == Some("localhost") && url.port() == Some(1420))
+}
+
 fn status(app: &tauri::AppHandle, message: &str, busy: bool) {
     if let Some(bar) = app.get_webview("app-toolbar") {
         // Messages are generated locally (never release notes or remote strings).
@@ -135,6 +150,7 @@ pub fn run() {
             let content = window.add_child(
                 tauri::webview::WebviewBuilder::new("main", WebviewUrl::External(APP_START_URL.parse()?))
                     .initialization_script(DESKTOP_INIT)
+                    .on_navigation(remote_navigation_allowed)
                     .devtools(false).zoom_hotkeys_enabled(true),
                 LogicalPosition::new(0.0, BAR_HEIGHT),
                 LogicalSize::new(1280.0, 800.0 - BAR_HEIGHT),
@@ -162,8 +178,7 @@ pub fn run() {
                             false
                         } else {
                             // The toolbar must remain local. It has no native IPC permissions.
-                            matches!(url.scheme(), "tauri" | "http" | "https") &&
-                                matches!(url.host_str(), Some("tauri.localhost" | "localhost"))
+                            toolbar_navigation_allowed(url)
                         }
                     }),
                 LogicalPosition::new(0.0, 0.0),
@@ -190,4 +205,21 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod security_tests {
+    use super::*;
+    #[test]
+    fn sec009_navigation_boundaries() {
+        for value in ["http://buildbench.online/", "file:///tmp/test.html", "data:text/html,test", "https://user:pass@example.test/"] {
+            assert!(!remote_navigation_allowed(&value.parse().unwrap()));
+        }
+        assert!(remote_navigation_allowed(&"https://example.test/".parse().unwrap()));
+        assert!(toolbar_navigation_allowed(&"tauri://localhost/toolbar.html".parse().unwrap()));
+        assert!(toolbar_navigation_allowed(&"http://tauri.localhost/toolbar.html".parse().unwrap()));
+        for value in ["https://localhost/toolbar.html", "http://localhost:9000/toolbar.html", "http://tauri.localhost:9000/toolbar.html", "tauri://localhost/other.html"] {
+            assert!(!toolbar_navigation_allowed(&value.parse().unwrap()));
+        }
+    }
 }
