@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -18,4 +19,14 @@ export function createManifest(version, directory) {
       'darwin-x86_64': mac,
     },
   };
+}
+
+// SEC-012: checksums supplement, rather than replace, native publisher signatures.
+export function createChecksums(directory, names) {
+  return [...names].sort().map(name => {
+    if (!/^[A-Za-z0-9_.-]+$/.test(name)) throw new Error('Invalid artifact filename');
+    const bytes = readFileSync(join(directory, name));
+    if (!bytes.length) throw new Error('Empty artifact');
+    return createHash('sha256').update(bytes).digest('hex') + '  ' + name;
+  }).join('\n') + '\n';
 }

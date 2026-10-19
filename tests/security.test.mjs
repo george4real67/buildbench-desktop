@@ -69,3 +69,9 @@ test('updates require signed artifacts from the fixed HTTPS release endpoint', (
   assert.notEqual(config.plugins.updater.dangerousInsecureTransportProtocol, true);
   assert.match(read('toolbar.html'), /href="https:\/\/buildbench.invalid\/check-for-updates"/);
 });
+
+test('SEC-011 workflow actions use immutable commits and read-only repository permissions',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/macos-release.yml',import.meta.url),'utf8');
+ for(const match of workflow.matchAll(/uses:\s*([^\s]+)/g))assert.match(match[1],/@[a-f0-9]{40}$/);
+ assert.match(workflow,/contents: read/);
+});
